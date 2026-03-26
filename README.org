@@ -84,6 +84,13 @@ Or with =use-package=:
   :hook (org-mode . org-pdf-slide-shower-mode))
 #+end_src
 
+or with =Doom Emacs=:
+put this code in =packages.el=
+#+begin_src emacs-lisp
+(package! org-pdf-slide-shower)
+#+end_src
+Then run =doom sync=.
+
 * Usage
 
 1. Write a link: =[[pdfslide:./deck.pdf::1]]=
