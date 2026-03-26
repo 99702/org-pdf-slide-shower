@@ -1,0 +1,123 @@
+#+TITLE: org-pdf-slide-shower
+
+Show specific PDF pages as inline images in org-mode.
+
+* What is this?
+
+Ever wanted to reference a specific slide from a PDF deck right inside your
+org notes?  This package does that.  Drop a =pdfslide= link pointing to a
+PDF + page number, and the page shows up as an inline image.
+
+Pages are extracted as PNGs and cached locally -- they only get extracted
+once, so saving the buffer a second time won't redo the work.
+
+* Quick example
+
+#+begin_example
+[[pdfslide:./lectures/intro.pdf::3]]
+#+end_example
+
+That shows page 3 of =intro.pdf= inline.  You can add a description too:
+
+#+begin_example
+[[pdfslide:./lectures/intro.pdf::3][Title slide]]
+#+end_example
+
+The extracted image ends up at =./lectures/intro-slides/page-3.png=.
+
+* Requirements
+
+- Emacs 27.1+
+- Org 9.0+
+- *pdftoppm* (ships with poppler-utils)
+
+** Installing pdftoppm
+
+Most Linux distros have it in repos already:
+
+#+begin_src sh
+# fedora/rhel
+sudo dnf install poppler-utils
+
+# debian/ubuntu
+sudo apt install poppler-utils
+
+# arch
+sudo pacman -S poppler
+
+# macos
+brew install poppler
+#+end_src
+
+Check it works: =pdftoppm -v=
+
+* Installation
+
+Clone the repo somewhere and point your config at it:
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/path/to/org-pdf-slide-shower")
+(require 'org-pdf-slide-shower)
+(add-hook 'org-mode-hook #'org-pdf-slide-shower-mode)
+#+end_src
+
+Or with =use-package=:
+
+#+begin_src emacs-lisp
+(use-package org-pdf-slide-shower
+  :load-path "~/path/to/org-pdf-slide-shower"
+  :hook (org-mode . org-pdf-slide-shower-mode))
+#+end_src
+
+* Usage
+
+1. Write a link: =[[pdfslide:./deck.pdf::1]]=
+2. Save (=C-x C-s=)
+3. The page gets extracted and displayed inline
+
+If you don't want to save, =M-x org-pdf-slide-shower-refresh= does the
+same thing manually.  =M-x org-pdf-slide-shower-clear= hides all the
+overlays.
+
+Clicking a link (=C-c C-o=) opens the PDF at that page in pdf-tools or
+doc-view.
+
+* Configuration
+
+You can tweak these if the defaults don't work for you:
+
+#+begin_src emacs-lisp
+;; bump up DPI for sharper images (default 150)
+(setq org-pdf-slide-shower-dpi 200)
+
+;; wider inline display (default 600px)
+(setq org-pdf-slide-shower-image-width 800)
+
+;; change the cache folder suffix (default "-slides")
+;; intro.pdf -> intro-slides/
+(setq org-pdf-slide-shower-cache-suffix "-slides")
+#+end_src
+
+* How it works
+
+The package registers a custom org link type =pdfslide=.  When you save an
+org buffer (with the mode active), it:
+
+1. Finds all =pdfslide= links
+2. For each one, checks if the PNG is already cached
+3. If not, runs =pdftoppm= to extract just that page
+4. Puts image overlays on the links
+
+The cache folder sits next to the PDF:
+
+#+begin_example
+./lectures/algo.pdf
+./lectures/algo-slides/
+  page-1.png
+  page-4.png
+  page-12.png
+#+end_example
+
+* License
+
+GPLv3
