@@ -5,7 +5,7 @@
 ;; Author: Rajan
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "27.1") (org "9.0"))
-;; Keywords: org, pdf, slides
+;; Keywords: hypermedia, multimedia
 ;; URL: https://github.com/rajan/org-pdf-slide-shower
 
 ;; This file is not part of GNU Emacs.
@@ -29,10 +29,13 @@
 ;;; Code:
 
 (require 'org)
+(require 'org-element)
 (require 'image)
 
+(declare-function doc-view-goto-page "doc-view" (page))
+
 (defgroup org-pdf-slide-shower nil
-  "Show PDF slides inline in org-mode."
+  "Show PDF slides inline in `org-mode'."
   :group 'org
   :prefix "org-pdf-slide-shower-")
 
@@ -86,7 +89,7 @@ E.g. for intro.pdf -> intro-slides/"
     (unless (file-exists-p abs-pdf)
       (user-error "Can't find PDF: %s" abs-pdf))
     (unless (executable-find org-pdf-slide-shower-pdftoppm-executable)
-      (user-error "pdftoppm not found -- install poppler-utils"))
+      (user-error "Pdftoppm not found -- install poppler-utils"))
     (unless (file-directory-p cache-dir)
       (make-directory cache-dir t))
     ;; pdftoppm -singlefile dumps to <prefix>.png, so we write to a
@@ -104,8 +107,8 @@ E.g. for intro.pdf -> intro-slides/"
           (rename-file tmp-png output-path t))))))
 
 (defun org-pdf-slide-shower--relative-image-path (pdf-path page)
-  "Like `--image-path' but returns a path relative to the org file's directory.
-This is what goes into the [[file:...]] companion link."
+  "Return relative cache path for PDF-PATH page PAGE.
+Like `org-pdf-slide-shower--image-path' but relative to the org file's dir."
   (let* ((buf-dir (file-name-directory (or buffer-file-name default-directory)))
          (abs-img (org-pdf-slide-shower--image-path pdf-path page)))
     (file-relative-name abs-img buf-dir)))
@@ -239,7 +242,7 @@ The companion [[file:...]] links are what make images visible on GitHub."
 ;; -- link type --
 
 (defun org-pdf-slide-shower--follow (path _)
-  "Open the PDF at the right page when you click the link."
+  "Follow a pdfslide link at PATH, opening the PDF at the right page."
   (let ((parsed (org-pdf-slide-shower--parse-link path)))
     (if parsed
         (let ((abs-pdf (org-pdf-slide-shower--resolve-pdf (car parsed))))
@@ -253,7 +256,7 @@ The companion [[file:...]] links are what make images visible on GitHub."
       (user-error "Bad pdfslide link: %s" path))))
 
 (defun org-pdf-slide-shower--export (path desc backend _info)
-  "Export handler -- turns pdfslide links into images for html/latex."
+  "Export pdfslide link at PATH with DESC for BACKEND as an image."
   (let* ((parsed (org-pdf-slide-shower--parse-link path))
          (img (when parsed
                 (org-pdf-slide-shower--image-path (car parsed) (cdr parsed))))
