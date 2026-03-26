@@ -1,3 +1,5 @@
+;;; README.org --- org-pdf-slide-shower displays specific PDF pages as inline images in Org mode. You write a link like [[pdfslide:./slides.pdf::3]] and the package extracts that page as a PNG (via pdftoppm) and shows it inline. It caches extracted images so they're only generated once, and auto-inserts companion [[file:...]] links so the images render on GitHub without the package installed.
+
 #+TITLE: org-pdf-slide-shower
 
 Show specific PDF pages as inline images in org-mode.
@@ -19,7 +21,7 @@ rendered -- even without this package installed.
 
 #+begin_example
 [[pdfslide:./lectures/intro.pdf::3]]
-#+end_example
++end_example
 
 That shows page 3 of =intro.pdf= inline.  You can add a description too:
 
@@ -71,7 +73,13 @@ Check it works: =pdftoppm -v=
 Clone the repo somewhere and point your config at it:
 
 #+begin_src emacs-lisp
+;;; Code:
+
 (add-to-list 'load-path "~/path/to/org-pdf-slide-shower")
+
+;;; Commentary:
+;;
+
 (require 'org-pdf-slide-shower)
 (add-hook 'org-mode-hook #'org-pdf-slide-shower-mode)
 #+end_src
@@ -137,3 +145,7 @@ The cache folder sits next to the PDF:
 * License
 
 GPLv3
+
+(provide 'README)
+
+;;; README.org ends here
