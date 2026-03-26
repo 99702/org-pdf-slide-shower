@@ -11,6 +11,10 @@ PDF + page number, and the page shows up as an inline image.
 Pages are extracted as PNGs and cached locally -- they only get extracted
 once, so saving the buffer a second time won't redo the work.
 
+It also auto-inserts a =[[file:...]]= image link below each pdfslide link on
+save, so the images show up on GitHub and anywhere else org files are
+rendered -- even without this package installed.
+
 * Quick example
 
 #+begin_example
@@ -24,6 +28,17 @@ That shows page 3 of =intro.pdf= inline.  You can add a description too:
 #+end_example
 
 The extracted image ends up at =./lectures/intro-slides/page-3.png=.
+
+When you save, the package also inserts a companion link automatically:
+
+#+begin_example
+[[pdfslide:./lectures/intro.pdf::3]]
+[[file:lectures/intro-slides/page-3.png]]
+#+end_example
+
+That =[[file:...]]= line is what makes the image render on GitHub, Gitea,
+or any org viewer.  You don't need to write it yourself -- the package
+handles it.  It won't duplicate on repeated saves either.
 
 * Requirements
 
@@ -106,7 +121,8 @@ org buffer (with the mode active), it:
 1. Finds all =pdfslide= links
 2. For each one, checks if the PNG is already cached
 3. If not, runs =pdftoppm= to extract just that page
-4. Puts image overlays on the links
+4. Inserts a =[[file:...]]= companion link below each pdfslide link (for GitHub/web rendering)
+5. After saving, puts image overlays on the links in Emacs
 
 The cache folder sits next to the PDF:
 

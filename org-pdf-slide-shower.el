@@ -103,6 +103,13 @@ E.g. for intro.pdf -> intro-slides/"
         (when (file-exists-p tmp-png)
           (rename-file tmp-png output-path t))))))
 
+(defun org-pdf-slide-shower--relative-image-path (pdf-path page)
+  "Like `--image-path' but returns a path relative to the org file's directory.
+This is what goes into the [[file:...]] companion link."
+  (let* ((buf-dir (file-name-directory (or buffer-file-name default-directory)))
+         (abs-img (org-pdf-slide-shower--image-path pdf-path page)))
+    (file-relative-name abs-img buf-dir)))
+
 (defun org-pdf-slide-shower--collect-links ()
   "Find all pdfslide links in buffer.  Returns list of (beg end pdf page img-path)."
   (let (result)
@@ -137,6 +144,51 @@ E.g. for intro.pdf -> intro-slides/"
     (when (> n 0)
       (message "org-pdf-slide-shower: extracted %d image(s)" n))))
 
+(defun org-pdf-slide-shower--companion-re (rel-path)
+  "Build a regexp that matches the auto-generated companion line for REL-PATH."
+  (concat "^\\[\\[file:" (regexp-quote rel-path) "\\]\\]$"))
+
+(defun org-pdf-slide-shower--update-companion-links ()
+  "Insert or update [[file:...]] links below each pdfslide link.
+Works bottom-to-top so insertions don't mess up earlier positions.
+This is what makes the images show up on GitHub and other org renderers."
+  (let ((links (reverse (org-pdf-slide-shower--collect-links)))
+        (modified nil))
+    (save-excursion
+      (dolist (link links)
+        (let* ((end (nth 1 link))
+               (pdf (nth 2 link))
+               (pg (nth 3 link))
+               (img (nth 4 link))
+               (rel (org-pdf-slide-shower--relative-image-path pdf pg))
+               (companion (format "[[file:%s]]" rel)))
+          (when (file-exists-p img)
+            (goto-char end)
+            ;; skip trailing whitespace on the same line
+            (skip-chars-forward " \t")
+            ;; check if next line already has our companion link
+            (let ((next-line-beg (line-beginning-position 2))
+                  (next-line-end (line-end-position 2)))
+              (if (and (< next-line-beg (point-max))
+                       (string-match-p
+                        (org-pdf-slide-shower--companion-re rel)
+                        (buffer-substring-no-properties next-line-beg next-line-end)))
+                  ;; already there, nothing to do
+                  nil
+                ;; check if next line is a stale companion (file link to our cache dir)
+                ;; if so, replace it instead of adding a duplicate
+                (let* ((next-text (buffer-substring-no-properties next-line-beg next-line-end))
+                       (stale (string-match-p "^\\[\\[file:.*-slides/page-[0-9]+\\.png\\]\\]$" next-text)))
+                  (when stale
+                    (delete-region next-line-beg (min (1+ next-line-end) (point-max))))
+                  ;; insert at end of the pdfslide link line
+                  (goto-char end)
+                  (end-of-line)
+                  (insert "\n" companion)
+                  (setq modified t))))))))
+    (when modified
+      (message "org-pdf-slide-shower: updated companion image links"))))
+
 (defun org-pdf-slide-shower--remove-overlays ()
   "Clear our overlays."
   (remove-overlays (point-min) (point-max) 'org-pdf-slide-shower t))
@@ -157,10 +209,16 @@ E.g. for intro.pdf -> intro-slides/"
           (overlay-put ov 'face 'default)
           (overlay-put ov 'help-echo img))))))
 
-(defun org-pdf-slide-shower--after-save ()
-  "Hook for after-save: extract + display."
+(defun org-pdf-slide-shower--before-save ()
+  "Hook for before-save: extract images and update companion links.
+The companion [[file:...]] links are what make images visible on GitHub."
   (when org-pdf-slide-shower-mode
     (org-pdf-slide-shower--ensure-images)
+    (org-pdf-slide-shower--update-companion-links)))
+
+(defun org-pdf-slide-shower--after-save ()
+  "Hook for after-save: refresh overlays."
+  (when org-pdf-slide-shower-mode
     (org-pdf-slide-shower--display-overlays)))
 
 ;;;###autoload
@@ -219,8 +277,10 @@ E.g. for intro.pdf -> intro-slides/"
   :group 'org-pdf-slide-shower
   (if org-pdf-slide-shower-mode
       (progn
+        (add-hook 'before-save-hook #'org-pdf-slide-shower--before-save nil t)
         (add-hook 'after-save-hook #'org-pdf-slide-shower--after-save nil t)
         (org-pdf-slide-shower--display-overlays))
+    (remove-hook 'before-save-hook #'org-pdf-slide-shower--before-save t)
     (remove-hook 'after-save-hook #'org-pdf-slide-shower--after-save t)
     (org-pdf-slide-shower--remove-overlays)))
 
