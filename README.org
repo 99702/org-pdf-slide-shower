@@ -1,4 +1,4 @@
-#+TITLE: org-pdf-slide-shower
+#+TITLE: org-pdf-slide-show
 
 Show specific PDF pages as inline images in org-mode.
 
@@ -71,23 +71,23 @@ Check it works: =pdftoppm -v=
 Clone the repo somewhere and point your config at it:
 
 #+begin_src emacs-lisp
-(add-to-list 'load-path "~/path/to/org-pdf-slide-shower")
-(require 'org-pdf-slide-shower)
-(add-hook 'org-mode-hook #'org-pdf-slide-shower-mode)
+(add-to-list 'load-path "~/path/to/org-pdf-slide-show")
+(require 'org-pdf-slide-show)
+(add-hook 'org-mode-hook #'org-pdf-slide-show-mode)
 #+end_src
 
 Or with =use-package=:
 
 #+begin_src emacs-lisp
-(use-package org-pdf-slide-shower
-  :load-path "~/path/to/org-pdf-slide-shower"
-  :hook (org-mode . org-pdf-slide-shower-mode))
+(use-package org-pdf-slide-show
+  :load-path "~/path/to/org-pdf-slide-show"
+  :hook (org-mode . org-pdf-slide-show-mode))
 #+end_src
 
 or with =Doom Emacs=:
 put this code in =packages.el=
 #+begin_src emacs-lisp
-(package! org-pdf-slide-shower)
+(package! org-pdf-slide-show)
 #+end_src
 Then run =doom sync=.
 
@@ -97,8 +97,8 @@ Then run =doom sync=.
 2. Save (=C-x C-s=)
 3. The page gets extracted and displayed inline
 
-If you don't want to save, =M-x org-pdf-slide-shower-refresh= does the
-same thing manually.  =M-x org-pdf-slide-shower-clear= hides all the
+If you don't want to save, =M-x org-pdf-slide-show-refresh= does the
+same thing manually.  =M-x org-pdf-slide-show-clear= hides all the
 overlays.
 
 Clicking a link (=C-c C-o=) opens the PDF at that page in pdf-tools or
@@ -110,14 +110,14 @@ You can tweak these if the defaults don't work for you:
 
 #+begin_src emacs-lisp
 ;; bump up DPI for sharper images (default 150)
-(setq org-pdf-slide-shower-dpi 200)
+(setq org-pdf-slide-show-dpi 200)
 
 ;; wider inline display (default 600px)
-(setq org-pdf-slide-shower-image-width 800)
+(setq org-pdf-slide-show-image-width 800)
 
 ;; change the cache folder suffix (default "-slides")
 ;; intro.pdf -> intro-slides/
-(setq org-pdf-slide-shower-cache-suffix "-slides")
+(setq org-pdf-slide-show-cache-suffix "-slides")
 #+end_src
 
 * How it works
@@ -143,4 +143,4 @@ The cache folder sits next to the PDF:
 
 * License
 
-GPLv3
+GPL-3.0-or-later
